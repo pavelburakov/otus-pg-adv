@@ -1,2 +1,2 @@
 # otus-pg-adv
-OTUS Postger Advanced
+OTUS Postgre Advanced
