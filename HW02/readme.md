@@ -34,7 +34,7 @@
 6. Подключитесь из контейнера с клиентом к контейнеру с сервером и создайте таблицу с данными о перевозках.
 
 create table shipments(id serial, product_name text, quantity int, destination text);
-
+```sql
 insert into shipments(product_name, quantity, destination) values('bananas', 1000, 'Europe');
 insert into shipments(product_name, quantity, destination) values('bananas', 1500, 'Asia');
 insert into shipments(product_name, quantity, destination) values('bananas', 2000, 'Africa');
@@ -45,7 +45,7 @@ insert into shipments(product_name, quantity, destination) values('sugar', 1000,
 insert into shipments(product_name, quantity, destination) values('sugar', 800, 'Asia');
 insert into shipments(product_name, quantity, destination) values('sugar', 600, 'Africa');
 insert into shipments(product_name, quantity, destination) values('sugar', 400, 'USA');
-
+```
 7. Подключитесь к контейнеру с сервером с ноутбука или компьютера.
 
 8. Удалите контейнер с сервером и создайте его заново.
