@@ -73,15 +73,39 @@ sudo mkfs.ext4 /dev/vdb
 sudo mkdir /mnt/pg-data
 sudo mount /dev/vdb /mnt/pg-data
 ```
+## 6. Настройка автоматического монтирования при загрузке
+Чтобы диск автоматически монтировался после перезагрузки, добавим запись в /etc/fstab.
 
-## 6. Остановка PostgreSQL и перенос данных
+Узнаём UUID диска:
+
+```bash
+sudo blkid /dev/vdb
+```
+
+Вывод:
+```text
+/dev/vdb: UUID="a1b2c3d4-e5f6-7890-abcd-ef1234567890" TYPE="ext4"
+```
+
+Редактируем /etc/fstab:
+```bash
+echo "UUID=a1b2c3d4-e5f6-7890-abcd-ef1234567890 /mnt/pg-data ext4 defaults,noatime 0 0" | sudo tee -a /etc/fstab
+```
+
+Проверяем, что запись корректна и монтирование работает:
+```bash
+sudo mount -a
+# Ошибок быть не должно
+```
+
+## 7. Остановка PostgreSQL и перенос данных
 ```bash
 sudo systemctl stop postgresql@17-main.service
 sudo mv /var/lib/postgresql/17/main /mnt/pg-data/17
 sudo chown -R postgres:postgres /mnt/pg-data/17
 ```
 
-## 7. Настройка PostgreSQL на новый каталог данных
+## 8. Настройка PostgreSQL на новый каталог данных
 ```bash
 sudo nano /etc/postgresql/17/main/postgresql.conf
 # Меняем строку:
@@ -93,7 +117,7 @@ data_directory = '/mnt/pg-data/17'
 sudo systemctl start postgresql@17-main.service
 ```
 
-## 8. Проверка
+## 9. Проверка
 ```bash
 sudo -u postgres psql -c "SHOW data_directory;"
 # Должно показать /mnt/pg-data/17
@@ -102,14 +126,47 @@ sudo -u postgres psql -c "SELECT * FROM shipments;"
 # Все 10 записей на месте
 ```
 
-## 9. Проверка отказоустойчивости
-Можно отмонтировать диск или перезагрузить ВМ – данные сохранятся.  
-Главное – при следующем запуске PostgreSQL будет использовать внешний диск.
+## 10. Проверка автоматического монтирования и работы после перезагрузки
+Перезагружаем ВМ:
+```bash
+sudo reboot
+```
+После перезагрузки подключаемся заново и проверяем:
+```bash
+# Проверяем, что диск примонтирован
+df -h | grep /mnt/pg-data
+# Должна быть строка с /dev/vdb
+
+# Проверяем, что PostgreSQL запущен
+sudo systemctl status postgresql@17-main.service
+# Active: active (running)
+
+# Проверяем данные
+sudo -u postgres psql -c "SELECT * FROM shipments;"
+```
+Вывод:
+```text
+ id | product_name | quantity | destination 
+----+--------------+----------+-------------
+  1 | bananas      |     1000 | Europe
+  2 | bananas      |     1500 | Asia
+  3 | bananas      |     2000 | Africa
+  4 | coffee       |      500 | USA
+  5 | coffee       |      700 | Canada
+  6 | coffee       |      300 | Japan
+  7 | sugar        |     1000 | Europe
+  8 | sugar        |      800 | Asia
+  9 | sugar        |      600 | Africa
+ 10 | sugar        |      400 | USA
+(10 rows)
+```
+Всё работает, данные сохранились, диск монтируется автоматически.
+
 
 ---
 
 **Выводы:**  
-- Внешний диск успешно подключён и отформатирован.  
+- Внешний диск успешно подключён, отформатирован и настроен для автоматического монтирования через /etc/fstab.
 - Данные PostgreSQL перенесены без потерь.  
-- Изменение `data_directory` в конфиге заставило сервер работать с новым диском.  
-- Данные сохраняются даже если пересоздать ВМ.
+- После перезагрузки ВМ диск монтируется автоматически, PostgreSQL запускается и работает с данными на внешнем диске.
+- Это обеспечивает дополнительную отказоустойчивость: данные не пропадут даже при проблемах с основным диском.
