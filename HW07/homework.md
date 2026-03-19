@@ -53,6 +53,7 @@ helm install banana-db oci://registry-1.docker.io/bitnamicharts/postgresql \
   --set primary.persistence.size=2Gi \
   --set primary.resources.requests.cpu=500m \
   --set primary.resources.requests.memory=512Mi \
+  --set readReplicas.enabled=true \
   --set replicaCount=1
 ```
 
@@ -181,9 +182,10 @@ SELECT * FROM shipments;
 Увеличиваем количество реплик:
 
 ```bash
-helm upgrade banana-db bitnami/postgresql \
+helm upgrade banana-db oci://registry-1.docker.io/bitnamicharts/postgresql \
   --set auth.postgresPassword=banana123 \
   --set primary.persistence.size=2Gi \
+  --set readReplicas.enabled=true \
   --set replicaCount=3
 ```
 
